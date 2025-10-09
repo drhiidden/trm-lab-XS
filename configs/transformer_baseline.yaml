@@ -1,0 +1,82 @@
+# Configuración para Transformer baseline
+# Para comparación con TRM
+
+# Modelo
+model_name: "transformer_baseline"
+model_config:
+  d_model: 512
+  n_heads: 8
+  n_layers: 6
+  d_ff: 2048
+  dropout: 0.1
+  max_seq_len: 2048
+
+# Dataset (configuración base, se puede sobrescribir)
+dataset:
+  name: "mnist"
+  config:
+    batch_size: 32
+    num_workers: 4
+    sequence_mode: true
+    patch_size: 4
+
+# Entrenamiento
+training:
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.01
+  scheduler: "cosine"
+  warmup_steps: 1000
+  gradient_clip: 1.0
+  accumulation_steps: 1
+  
+# Optimizador
+optimizer:
+  name: "adamw"
+  lr: 0.001
+  weight_decay: 0.01
+  betas: [0.9, 0.95]
+  eps: 1e-8
+
+# Scheduler
+scheduler:
+  name: "cosine"
+  warmup_steps: 1000
+  max_steps: 100000
+
+# Pérdida
+loss:
+  name: "cross_entropy"
+  label_smoothing: 0.1
+
+# Métricas
+metrics:
+  - "accuracy"
+  - "top_k_accuracy"
+
+# Logging
+logging:
+  use_wandb: true
+  project: "trm-lab"
+  experiment_name: "transformer_baseline"
+  log_interval: 100
+  save_interval: 1000
+  eval_interval: 500
+
+# Checkpoints
+checkpoints:
+  save_dir: "logs/baselines/transformer"
+  save_best: true
+  save_last: true
+  monitor_metric: "val_accuracy"
+  mode: "max"
+
+# Dispositivo
+device: "auto"
+
+# Semilla
+seed: 42
+
+# Reproducibilidad
+deterministic: true
+benchmark: false

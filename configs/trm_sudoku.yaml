@@ -1,0 +1,97 @@
+# Configuración para experimento TRM en Sudoku
+# Objetivo: >85% accuracy en grid completo
+
+# Modelo
+model_name: "trm_base"
+model_config:
+  d_model: 512
+  n_layers: 2
+  n_inner: 6
+  T: 3
+  use_attention: false
+  dropout: 0.1
+  use_ema: true
+  ema_decay: 0.999
+  use_halting: true
+  halting_threshold: 0.5
+  deep_supervision: 16
+  vocab_size: 10  # 0-9 para Sudoku
+  max_seq_len: 81  # 9x9 grid
+
+# Dataset
+dataset:
+  name: "sudoku"
+  config:
+    num_samples: 10000
+    difficulty: "medium"
+    grid_size: 9
+    batch_size: 32
+    num_workers: 4
+    train_size: 8000
+    val_size: 1000
+    test_size: 1000
+
+# Entrenamiento
+training:
+  epochs: 100
+  learning_rate: 0.001
+  weight_decay: 0.01
+  scheduler: "cosine"
+  warmup_steps: 1000
+  gradient_clip: 1.0
+  accumulation_steps: 1
+  
+# Optimizador
+optimizer:
+  name: "adamw"
+  lr: 0.001
+  weight_decay: 0.01
+  betas: [0.9, 0.95]
+  eps: 1e-8
+
+# Scheduler
+scheduler:
+  name: "cosine"
+  warmup_steps: 1000
+  max_steps: 100000
+
+# Pérdida
+loss:
+  name: "cross_entropy"
+  label_smoothing: 0.1
+  halting_weight: 0.1
+
+# Métricas
+metrics:
+  - "accuracy"
+  - "grid_accuracy"
+  - "row_accuracy"
+  - "column_accuracy"
+  - "box_accuracy"
+
+# Logging
+logging:
+  use_wandb: true
+  project: "trm-lab"
+  experiment_name: "trm_sudoku"
+  log_interval: 100
+  save_interval: 1000
+  eval_interval: 500
+
+# Checkpoints
+checkpoints:
+  save_dir: "logs/sudoku/trm_base"
+  save_best: true
+  save_last: true
+  monitor_metric: "val_grid_accuracy"
+  mode: "max"
+
+# Dispositivo
+device: "auto"  # auto, cpu, cuda, mps
+
+# Semilla
+seed: 42
+
+# Reproducibilidad
+deterministic: true
+benchmark: false

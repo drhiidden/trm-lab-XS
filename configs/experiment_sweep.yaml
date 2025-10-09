@@ -1,0 +1,220 @@
+# Configuración para barrido de hiperparámetros
+# Ablaciones automáticas sobre T, n, EMA, capas, etc.
+
+# Configuración base
+base_config:
+  model_name: "trm_base"
+  dataset:
+    name: "sudoku"
+    config:
+      num_samples: 5000
+      difficulty: "medium"
+      grid_size: 9
+      batch_size: 32
+      num_workers: 4
+      train_size: 4000
+      val_size: 500
+      test_size: 500
+  
+  training:
+    epochs: 50
+    learning_rate: 0.001
+    weight_decay: 0.01
+    scheduler: "cosine"
+    warmup_steps: 500
+    gradient_clip: 1.0
+    accumulation_steps: 1
+  
+  optimizer:
+    name: "adamw"
+    lr: 0.001
+    weight_decay: 0.01
+    betas: [0.9, 0.95]
+    eps: 1e-8
+  
+  scheduler:
+    name: "cosine"
+    warmup_steps: 500
+    max_steps: 50000
+  
+  loss:
+    name: "cross_entropy"
+    label_smoothing: 0.1
+    halting_weight: 0.1
+  
+  metrics:
+    - "accuracy"
+    - "grid_accuracy"
+    - "row_accuracy"
+    - "column_accuracy"
+    - "box_accuracy"
+  
+  logging:
+    use_wandb: true
+    project: "trm-lab"
+    experiment_name: "trm_ablation"
+    log_interval: 50
+    save_interval: 1000
+    eval_interval: 500
+  
+  checkpoints:
+    save_dir: "logs/ablation"
+    save_best: true
+    save_last: false
+    monitor_metric: "val_grid_accuracy"
+    mode: "max"
+  
+  device: "auto"
+  seed: 42
+  deterministic: true
+  benchmark: false
+
+# Parámetros para barrido
+sweep_params:
+  # Variar T (ciclos externos)
+  T: [1, 2, 3, 4, 5]
+  
+  # Variar n_inner (actualizaciones internas)
+  n_inner: [3, 6, 9, 12]
+  
+  # Variar número de capas
+  n_layers: [1, 2, 3, 4]
+  
+  # Variar dimensión del modelo
+  d_model: [256, 512, 1024]
+  
+  # Variar EMA decay
+  ema_decay: [0.99, 0.999, 0.9999]
+  
+  # Variar use_attention vs use_mixer
+  use_attention: [true, false]
+  
+  # Variar halting threshold
+  halting_threshold: [0.3, 0.5, 0.7]
+  
+  # Variar deep supervision
+  deep_supervision: [8, 16, 32]
+
+# Configuraciones específicas para diferentes experimentos
+experiments:
+  # Experimento 1: Variar T
+  T_sweep:
+    base_config: "base_config"
+    sweep_params:
+      T: [1, 2, 3, 4, 5]
+    fixed_params:
+      n_inner: 6
+      n_layers: 2
+      d_model: 512
+      use_attention: false
+      ema_decay: 0.999
+      halting_threshold: 0.5
+      deep_supervision: 16
+  
+  # Experimento 2: Variar n_inner
+  n_inner_sweep:
+    base_config: "base_config"
+    sweep_params:
+      n_inner: [3, 6, 9, 12]
+    fixed_params:
+      T: 3
+      n_layers: 2
+      d_model: 512
+      use_attention: false
+      ema_decay: 0.999
+      halting_threshold: 0.5
+      deep_supervision: 16
+  
+  # Experimento 3: Comparar atención vs mixer
+  attention_vs_mixer:
+    base_config: "base_config"
+    sweep_params:
+      use_attention: [true, false]
+    fixed_params:
+      T: 3
+      n_inner: 6
+      n_layers: 2
+      d_model: 512
+      ema_decay: 0.999
+      halting_threshold: 0.5
+      deep_supervision: 16
+  
+  # Experimento 4: Variar EMA decay
+  ema_sweep:
+    base_config: "base_config"
+    sweep_params:
+      ema_decay: [0.99, 0.999, 0.9999]
+    fixed_params:
+      T: 3
+      n_inner: 6
+      n_layers: 2
+      d_model: 512
+      use_attention: false
+      halting_threshold: 0.5
+      deep_supervision: 16
+  
+  # Experimento 5: Variar número de capas
+  layers_sweep:
+    base_config: "base_config"
+    sweep_params:
+      n_layers: [1, 2, 3, 4]
+    fixed_params:
+      T: 3
+      n_inner: 6
+      d_model: 512
+      use_attention: false
+      ema_decay: 0.999
+      halting_threshold: 0.5
+      deep_supervision: 16
+
+# Configuración de barrido
+sweep_config:
+  method: "grid"  # grid, random, bayesian
+  metric:
+    name: "val_grid_accuracy"
+    goal: "maximize"
+  
+  # Parámetros para barrido aleatorio
+  random_sweep:
+    max_runs: 50
+    early_terminate:
+      type: "hyperband"
+      min_iter: 10
+      max_iter: 50
+  
+  # Parámetros para barrido bayesiano
+  bayesian_sweep:
+    max_runs: 100
+    early_terminate:
+      type: "hyperband"
+      min_iter: 10
+      max_iter: 50
+
+# Configuración de reporte
+reporting:
+  save_results: true
+  results_dir: "results/ablation"
+  format: "csv"  # csv, json, yaml
+  
+  # Métricas a reportar
+  metrics:
+    - "val_grid_accuracy"
+    - "val_accuracy"
+    - "val_row_accuracy"
+    - "val_column_accuracy"
+    - "val_box_accuracy"
+    - "train_loss"
+    - "val_loss"
+    - "epochs"
+    - "total_time"
+  
+  # Parámetros a reportar
+  params:
+    - "T"
+    - "n_inner"
+    - "n_layers"
+    - "d_model"
+    - "use_attention"
+    - "ema_decay"
+    - "halting_threshold"
+    - "deep_supervision"

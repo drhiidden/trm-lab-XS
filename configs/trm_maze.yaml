@@ -1,0 +1,95 @@
+# Configuración para experimento TRM en Laberintos
+# Objetivo: >80% accuracy en path completo
+
+# Modelo
+model_name: "trm_attention"
+model_config:
+  d_model: 512
+  n_layers: 2
+  n_inner: 6
+  T: 3
+  use_attention: true
+  n_heads: 8
+  dropout: 0.1
+  use_ema: true
+  ema_decay: 0.999
+  use_halting: true
+  halting_threshold: 0.5
+  deep_supervision: 16
+  max_seq_len: 900  # 30x30 grid
+
+# Dataset
+dataset:
+  name: "maze"
+  config:
+    num_samples: 10000
+    width: 30
+    height: 30
+    batch_size: 16  # Menor batch size por el tamaño del grid
+    num_workers: 4
+    train_size: 8000
+    val_size: 1000
+    test_size: 1000
+
+# Entrenamiento
+training:
+  epochs: 150
+  learning_rate: 0.0005
+  weight_decay: 0.01
+  scheduler: "cosine"
+  warmup_steps: 2000
+  gradient_clip: 1.0
+  accumulation_steps: 2
+  
+# Optimizador
+optimizer:
+  name: "adamw"
+  lr: 0.0005
+  weight_decay: 0.01
+  betas: [0.9, 0.95]
+  eps: 1e-8
+
+# Scheduler
+scheduler:
+  name: "cosine"
+  warmup_steps: 2000
+  max_steps: 150000
+
+# Pérdida
+loss:
+  name: "bce_with_logits"
+  pos_weight: 1.0
+  halting_weight: 0.1
+
+# Métricas
+metrics:
+  - "path_accuracy"
+  - "path_length_ratio"
+  - "connectivity_score"
+
+# Logging
+logging:
+  use_wandb: true
+  project: "trm-lab"
+  experiment_name: "trm_maze"
+  log_interval: 50
+  save_interval: 1000
+  eval_interval: 500
+
+# Checkpoints
+checkpoints:
+  save_dir: "logs/maze/trm_attention"
+  save_best: true
+  save_last: true
+  monitor_metric: "val_path_accuracy"
+  mode: "max"
+
+# Dispositivo
+device: "auto"
+
+# Semilla
+seed: 42
+
+# Reproducibilidad
+deterministic: true
+benchmark: false
