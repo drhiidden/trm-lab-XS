@@ -29,4 +29,4 @@ Parameters shown on screen should match the active YAML config when exported fro
 - Paper: [arXiv:2510.04871](https://arxiv.org/abs/2510.04871)
 - Architecture diagram: root `README.md` (Mermaid)
 
-Full curatorial draft (maintainer): HALETHEIA `.procontext` → Domain-CreatorContent `05-media/project-art/trm-lab-xs-art-ficha.md` (private hub; not required to clone).
+This page is **self-contained** for visitors; extended production notes stay with the maintainers and are not linked from here.
